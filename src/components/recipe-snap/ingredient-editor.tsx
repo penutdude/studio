@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export function IngredientEditor({
   disabled,
 }: IngredientEditorProps) {
   return (
-    <Card className="shadow-lg rounded-xl">
+    <Card className="shadow-lg rounded-xl transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 dark:hover:shadow-primary/10">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
             <BookOpenCheck className="text-primary" />
@@ -56,13 +57,13 @@ export function IngredientEditor({
         <div>
           <Label className="font-semibold mb-2 block">Identified Ingredients ({identifiedIngredients.length})</Label>
           {identifiedIngredients.length > 0 ? (
-            <div className="flex flex-wrap gap-2 p-2 border border-border rounded-md bg-background min-h-[40px]">
+            <div className="flex flex-wrap gap-2 p-3 border border-border rounded-md bg-muted/30 dark:bg-muted/10 min-h-[40px]">
               {identifiedIngredients.map((ingredient) => (
-                <Badge key={ingredient} variant="secondary" className="text-sm py-1 px-3">
+                <Badge key={ingredient} variant="secondary" className="text-sm py-1 px-3 shadow-sm">
                   {ingredient}
                   <button
                     onClick={() => onRemoveIdentifiedIngredient(ingredient)}
-                    className="ml-2 rounded-full hover:bg-destructive/20 p-0.5 disabled:opacity-50"
+                    className="ml-2 rounded-full hover:bg-destructive/20 dark:hover:bg-destructive/30 p-0.5 disabled:opacity-50"
                     aria-label={`Remove ${ingredient}`}
                     disabled={isSuggesting || disabled}
                   >
@@ -72,12 +73,12 @@ export function IngredientEditor({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground p-2 border border-border rounded-md bg-background">No ingredients identified yet, or all have been removed.</p>
+            <p className="text-sm text-muted-foreground p-3 border border-border rounded-md bg-muted/30 dark:bg-muted/10">No ingredients identified yet, or all have been removed.</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="user-added-ingredients" className="font-semibold flex items-center gap-1"><PlusCircle size={16}/>Add Ingredients</Label>
+          <Label htmlFor="user-added-ingredients" className="font-semibold flex items-center gap-1"><PlusCircle size={16} className="text-primary/80"/>Add Ingredients</Label>
           <Input
             id="user-added-ingredients"
             placeholder="e.g., salt, pepper, olive oil (comma-separated)"
@@ -89,7 +90,7 @@ export function IngredientEditor({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="excluded-ingredients" className="font-semibold flex items-center gap-1"><MinusCircle size={16}/>Exclude Ingredients</Label>
+          <Label htmlFor="excluded-ingredients" className="font-semibold flex items-center gap-1"><MinusCircle size={16} className="text-destructive/80" />Exclude Ingredients</Label>
           <Input
             id="excluded-ingredients"
             placeholder="e.g., nuts, dairy (comma-separated)"

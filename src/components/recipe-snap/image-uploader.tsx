@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -25,7 +26,7 @@ export function ImageUploader({
   disabled,
 }: ImageUploaderProps) {
   return (
-    <Card className="shadow-lg rounded-xl">
+    <Card className="shadow-lg rounded-xl transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 dark:hover:shadow-primary/10">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
           <UploadCloud className="text-primary" />
@@ -43,13 +44,13 @@ export function ImageUploader({
             type="file"
             accept="image/*"
             onChange={onImageChange}
-            className="file:text-primary file:font-semibold hover:file:bg-accent/20"
+            className="file:text-primary file:font-semibold hover:file:bg-accent/20 cursor-pointer"
             disabled={isIdentifying || disabled}
           />
         </div>
 
         {imageDataUri && (
-          <div className="mt-4 border border-border rounded-lg p-2 bg-background shadow-inner">
+          <div className="mt-4 border border-border rounded-lg p-2 bg-muted/20 dark:bg-muted/10 shadow-inner">
             <Image
               src={imageDataUri}
               alt="Uploaded ingredients"
@@ -61,7 +62,7 @@ export function ImageUploader({
           </div>
         )}
         {!imageDataUri && (
-           <div className="mt-4 border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center h-56 bg-muted/30">
+           <div className="mt-4 border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center h-56 bg-muted/30 dark:bg-muted/10">
             <ImageIcon size={48} className="text-muted-foreground mb-2" />
             <p className="text-muted-foreground text-center">Image preview will appear here</p>
           </div>

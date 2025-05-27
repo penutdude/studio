@@ -1,3 +1,4 @@
+
 import type { SuggestRecipesOutput } from "@/ai/flows/suggest-recipes-from-ingredients";
 import {
   Accordion,
@@ -30,7 +31,7 @@ function MatchQualityBadge({ quality }: { quality: number }) {
   }
 
   return (
-    <Badge variant={variant} className="flex items-center gap-1">
+    <Badge variant={variant} className="flex items-center gap-1 text-xs sm:text-sm py-1 px-2 sm:px-3 shadow-sm">
       <Star size={14} /> 
       {text} ({Math.round(quality * 100)}%)
     </Badge>
@@ -40,9 +41,9 @@ function MatchQualityBadge({ quality }: { quality: number }) {
 
 export function RecipeDisplay({ recipe }: RecipeDisplayProps) {
   return (
-    <Card className="shadow-md rounded-xl overflow-hidden_">
+    <Card className="shadow-md rounded-xl overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 dark:hover:shadow-primary/10">
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
             <CardTitle className="text-xl text-primary">{recipe.name}</CardTitle>
             <MatchQualityBadge quality={recipe.matchQuality} />
         </div>
@@ -51,7 +52,7 @@ export function RecipeDisplay({ recipe }: RecipeDisplayProps) {
       <CardContent>
         <Accordion type="single" collapsible className="w-full" defaultValue="ingredients">
           <AccordionItem value="ingredients">
-            <AccordionTrigger className="text-lg font-medium hover:text-accent">
+            <AccordionTrigger className="text-lg font-medium hover:text-accent focus:text-accent">
                 <ListChecks size={20} className="mr-2 text-accent" /> Ingredients
             </AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -63,7 +64,7 @@ export function RecipeDisplay({ recipe }: RecipeDisplayProps) {
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="instructions">
-            <AccordionTrigger className="text-lg font-medium hover:text-accent">
+            <AccordionTrigger className="text-lg font-medium hover:text-accent focus:text-accent">
                 <CookingPot size={20} className="mr-2 text-accent" /> Instructions
             </AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -76,7 +77,7 @@ export function RecipeDisplay({ recipe }: RecipeDisplayProps) {
           </AccordionItem>
           {recipe.nutrients && (
             <AccordionItem value="nutrients">
-              <AccordionTrigger className="text-lg font-medium hover:text-accent">
+              <AccordionTrigger className="text-lg font-medium hover:text-accent focus:text-accent">
                   <Activity size={20} className="mr-2 text-accent" /> Nutrients (per serving)
               </AccordionTrigger>
               <AccordionContent className="pt-2">

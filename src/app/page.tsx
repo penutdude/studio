@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from "react";
@@ -11,7 +12,7 @@ import { Spinner } from "@/components/ui/loader";
 import { identifyIngredientsFromPhoto, type IdentifyIngredientsFromPhotoOutput } from "@/ai/flows/identify-ingredients-from-photo";
 import { suggestRecipes, type SuggestRecipesInput, type SuggestRecipesOutput } from "@/ai/flows/suggest-recipes-from-ingredients";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Salad } from "lucide-react";
+import { AlertTriangle, Salad, ChefHat } from "lucide-react";
 
 const parseCsvToArray = (csvString: string): string[] => {
   if (!csvString.trim()) return [];
@@ -131,9 +132,13 @@ export default function RecipeSnapPage() {
   
   if (!isClient) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center bg-background">
-        <Spinner size="xl" />
-        <p className="mt-4 text-lg text-primary">Loading RecipeSnap...</p>
+      <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground transition-colors duration-300 p-4">
+        <div className="relative mb-6 animate-pulse">
+          <ChefHat size={80} className="text-primary opacity-90" />
+        </div>
+        <Spinner size="xl" className="text-primary" />
+        <p className="mt-6 text-2xl font-semibold text-primary text-center">Loading RecipeSnap</p>
+        <p className="mt-2 text-md text-muted-foreground text-center">Whipping up something delicious...</p>
       </div>
     );
   }
@@ -160,7 +165,7 @@ export default function RecipeSnapPage() {
                 <AlertDescription>{identificationError}</AlertDescription>
               </Alert>
             )}
-            {(editableIngredients.length > 0 || isLoadingIdentification || userAddedIngredients || excludedIngredients || additionalInstructions) && !identificationError && (
+            {(editableIngredients.length > 0 || isLoadingIdentification || userAddedIngredients || excludedIngredients || additionalInstructions || imageDataUri) && !identificationError && (
               <IngredientEditor
                 identifiedIngredients={editableIngredients}
                 onRemoveIdentifiedIngredient={handleRemoveIdentifiedIngredient}
@@ -172,13 +177,13 @@ export default function RecipeSnapPage() {
                 onAdditionalInstructionsChange={setAdditionalInstructions}
                 onSuggestRecipes={handleSuggestRecipes}
                 isSuggesting={isLoadingRecipes}
-                disabled={isLoadingIdentification}
+                disabled={isLoadingIdentification || !imageDataUri && editableIngredients.length === 0 && userAddedIngredients.length === 0}
               />
             )}
           </section>
 
           {/* Right Column: Recipe Results */}
-          <section className="space-y-6 lg:sticky lg:top-8">
+          <section className="space-y-6 lg:sticky lg:top-24"> {/* Adjusted sticky top due to sticky header */}
             <h2 className="text-3xl font-bold text-primary flex items-center gap-2">
               <Salad size={30} />
               Recipe Suggestions
@@ -200,7 +205,7 @@ export default function RecipeSnapPage() {
               <div className="p-8 text-center bg-card rounded-xl shadow-lg">
                 <Salad size={48} className="mx-auto text-muted-foreground mb-4" />
                 <p className="text-lg text-muted-foreground">
-                  {imageDataUri ? "Refine your ingredients and click 'Suggest Recipes'!" : "Upload an image and identify ingredients to see recipe suggestions here."}
+                  {imageDataUri || editableIngredients.length > 0 || userAddedIngredients ? "Refine your ingredients and click 'Suggest Recipes'!" : "Upload an image and identify ingredients to see recipe suggestions here."}
                 </p>
               </div>
             )}
