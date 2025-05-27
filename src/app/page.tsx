@@ -2,17 +2,18 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { ImageUploader } from "@/components/recipe-snap/image-uploader";
 import { IngredientEditor } from "@/components/recipe-snap/ingredient-editor";
 import { RecipeResults } from "@/components/recipe-snap/recipe-results";
+import { RecipeDisplay } from "@/components/recipe-snap/recipe-display"; // Import RecipeDisplay
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/loader";
 import { identifyIngredientsFromPhoto, type IdentifyIngredientsFromPhotoOutput } from "@/ai/flows/identify-ingredients-from-photo";
 import { suggestRecipes, type SuggestRecipesInput, type SuggestRecipesOutput } from "@/ai/flows/suggest-recipes-from-ingredients";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Salad, ChefHat } from "lucide-react";
+import { AlertTriangle, Salad, ChefHat, Star } from "lucide-react"; // Added Star
 import { auth, db } from "@/firebase/firebaseConfig";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import type { User } from "firebase/auth";
@@ -164,6 +165,14 @@ export default function RecipeSnapPage() {
     }
   };
   
+  const topRecipe = useMemo(() => {
+    if (suggestedRecipes && suggestedRecipes.length > 0) {
+      // Create a mutable copy before sorting
+      return [...suggestedRecipes].sort((a, b) => b.matchQuality - a.matchQuality)[0];
+    }
+    return null;
+  }, [suggestedRecipes]);
+
   if (!isClient) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center bg-background text-foreground transition-colors duration-300 p-4">
@@ -244,7 +253,18 @@ export default function RecipeSnapPage() {
               </div>
             )}
             {!isLoadingRecipes && suggestedRecipes.length > 0 && (
-              <RecipeResults recipes={suggestedRecipes} />
+              <div className="space-y-6"> {/* Wrapper for RecipeResults and Featured Recipe */}
+                <RecipeResults recipes={suggestedRecipes} />
+                {topRecipe && (
+                  <div className="mt-8 pt-6 border-t border-border">
+                    <h3 className="text-2xl font-semibold text-accent mb-4 flex items-center gap-2">
+                      <Star size={26} className="text-accent" />
+                      Featured Recipe
+                    </h3>
+                    <RecipeDisplay recipe={topRecipe} />
+                  </div>
+                )}
+              </div>
             )}
           </section>
         </div>
@@ -255,3 +275,4 @@ export default function RecipeSnapPage() {
     </div>
   );
 }
+
