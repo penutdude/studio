@@ -27,6 +27,13 @@ const SuggestRecipesInputSchema = z.object({
 });
 export type SuggestRecipesInput = z.infer<typeof SuggestRecipesInputSchema>;
 
+const NutrientInfoSchema = z.object({
+  calories: z.string().describe('Estimated calories per serving, e.g., "350 kcal"'),
+  protein: z.string().describe('Estimated protein per serving, e.g., "20g"'),
+  fat: z.string().describe('Estimated fat per serving, e.g., "15g"'),
+  carbohydrates: z.string().describe('Estimated carbohydrates per serving, e.g., "30g"'),
+});
+
 const SuggestRecipesOutputSchema = z.object({
   recipes: z.array(
     z.object({
@@ -36,6 +43,7 @@ const SuggestRecipesOutputSchema = z.object({
       matchQuality: z
         .number()
         .describe('A number between 0 and 1 indicating the relevancy of the recipe to the provided ingredients.'),
+      nutrients: NutrientInfoSchema.describe('Estimated nutritional information per serving.'),
     })
   ).describe('An array of suggested recipes based on the identified ingredients.'),
 });
@@ -63,7 +71,7 @@ Additional Instructions: {{additionalInstructions}}
 
 Generate recipes that utilize as many of the provided ingredients as possible, and provide a matchQuality score between 0 and 1, where 1 means the recipe uses all of the ingredients and 0 means the recipe is not a good fit.
 
-Each recipe should include a name, a list of ingredients, and step-by-step instructions.
+Each recipe should include a name, a list of ingredients, step-by-step instructions, and estimated nutritional information (calories, protein, fat, carbohydrates per serving). Provide specific values for nutrients, for example, "350 kcal" for calories.
 `,
 });
 

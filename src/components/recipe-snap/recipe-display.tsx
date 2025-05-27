@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ListChecks, CookingPot, Star } from "lucide-react";
+import { ListChecks, CookingPot, Star, Activity } from "lucide-react";
 
 type Recipe = SuggestRecipesOutput["recipes"][0];
 
@@ -49,7 +49,7 @@ export function RecipeDisplay({ recipe }: RecipeDisplayProps) {
         <CardDescription>A delicious recipe suggestion based on your ingredients.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full" defaultValue="ingredients">
           <AccordionItem value="ingredients">
             <AccordionTrigger className="text-lg font-medium hover:text-accent">
                 <ListChecks size={20} className="mr-2 text-accent" /> Ingredients
@@ -74,6 +74,21 @@ export function RecipeDisplay({ recipe }: RecipeDisplayProps) {
               </ol>
             </AccordionContent>
           </AccordionItem>
+          {recipe.nutrients && (
+            <AccordionItem value="nutrients">
+              <AccordionTrigger className="text-lg font-medium hover:text-accent">
+                  <Activity size={20} className="mr-2 text-accent" /> Nutrients (per serving)
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <ul className="space-y-1 pl-2 text-foreground/90">
+                  {recipe.nutrients.calories && <li><strong>Calories:</strong> {recipe.nutrients.calories}</li>}
+                  {recipe.nutrients.protein && <li><strong>Protein:</strong> {recipe.nutrients.protein}</li>}
+                  {recipe.nutrients.fat && <li><strong>Fat:</strong> {recipe.nutrients.fat}</li>}
+                  {recipe.nutrients.carbohydrates && <li><strong>Carbohydrates:</strong> {recipe.nutrients.carbohydrates}</li>}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          )}
         </Accordion>
       </CardContent>
     </Card>
