@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth } from '@/firebase/firebaseConfig';
-import { ChefHat, LogIn, UserPlus, LogOut, UserCircle } from 'lucide-react';
+import { ChefHat, LogIn, UserPlus, LogOut, History } from 'lucide-react'; // Added History icon
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -86,10 +86,15 @@ export function AppHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/my-recipes')} className="cursor-pointer">
+                  <History className="mr-2 h-4 w-4" />
+                  <span>My Recipes</span>
+                </DropdownMenuItem>
                 {/* <DropdownMenuItem onClick={() => router.push('/profile')}>
                   <UserCircle className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem> */}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>

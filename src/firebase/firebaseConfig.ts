@@ -1,10 +1,7 @@
 // src/firebase/firebaseConfig.ts
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-// Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-// For example, to use Firestore:
-// import { getFirestore } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -28,5 +25,4 @@ if (!getApps().length) {
 export { app };
 
 export const auth = getAuth(app);
-// Example exports for Firestore (uncomment if you set them up)
-// export const db = getFirestore(app);
+export const db = getFirestore(app); // Initialize Firestore

@@ -13,6 +13,9 @@ import { identifyIngredientsFromPhoto, type IdentifyIngredientsFromPhotoOutput }
 import { suggestRecipes, type SuggestRecipesInput, type SuggestRecipesOutput } from "@/ai/flows/suggest-recipes-from-ingredients";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Salad, ChefHat } from "lucide-react";
+import { auth, db } from "@/firebase/firebaseConfig";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import type { User } from "firebase/auth";
 
 const parseCsvToArray = (csvString: string): string[] => {
   if (!csvString.trim()) return [];
@@ -34,8 +37,14 @@ export default function RecipeSnapPage() {
   const [suggestedRecipes, setSuggestedRecipes] = useState<SuggestRecipesOutput['recipes']>([]);
   
   const [isClient, setIsClient] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
   useEffect(() => {
     setIsClient(true);
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
   }, []);
 
 
@@ -90,6 +99,26 @@ export default function RecipeSnapPage() {
     setEditableIngredients(prev => prev.filter(ing => ing !== ingredientToRemove));
   };
 
+  const saveRecipesToHistory = async (recipesToSave: SuggestRecipesOutput['recipes']) => {
+    if (!currentUser) return;
+
+    const recipesCollectionRef = collection(db, "userRecipes");
+    try {
+      for (const recipe of recipesToSave) {
+        await addDoc(recipesCollectionRef, {
+          userId: currentUser.uid,
+          userEmail: currentUser.email, // Optional: for easier debugging in Firestore
+          createdAt: serverTimestamp(),
+          ...recipe, // Spread the recipe object
+        });
+      }
+      toast({ title: "Recipes Saved!", description: "Your new recipes have been saved to your history."});
+    } catch (error) {
+      console.error("Error saving recipes to history:", error);
+      toast({ title: "Save Failed", description: "Could not save recipes to your history.", variant: "destructive"});
+    }
+  };
+
   const handleSuggestRecipes = async () => {
     setIsLoadingRecipes(true);
     setRecipeError(null);
@@ -116,6 +145,11 @@ export default function RecipeSnapPage() {
       if (result.recipes && result.recipes.length > 0) {
         setSuggestedRecipes(result.recipes);
         toast({ title: "Recipes Found!", description: `Found ${result.recipes.length} recipe suggestions.`});
+        if (currentUser) {
+          await saveRecipesToHistory(result.recipes);
+        } else {
+          toast({ title: "Login to Save", description: "Log in or sign up to save your recipe history!", variant: "default"});
+        }
       } else {
         setRecipeError("No recipes found matching your criteria. Try adjusting ingredients or instructions.");
         toast({ title: "No Recipes", description: "Could not find any recipes. Try different ingredients?"});
