@@ -1,3 +1,218 @@
-export default function Home() {
-  return <></>;
+"use client";
+
+import type React from "react";
+import { useState, useEffect } from "react";
+import { AppHeader } from "@/components/layout/app-header";
+import { ImageUploader } from "@/components/recipe-snap/image-uploader";
+import { IngredientEditor } from "@/components/recipe-snap/ingredient-editor";
+import { RecipeResults } from "@/components/recipe-snap/recipe-results";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/loader";
+import { identifyIngredientsFromPhoto, type IdentifyIngredientsFromPhotoOutput } from "@/ai/flows/identify-ingredients-from-photo";
+import { suggestRecipes, type SuggestRecipesInput, type SuggestRecipesOutput } from "@/ai/flows/suggest-recipes-from-ingredients";
+import { useToast } from "@/hooks/use-toast";
+import { AlertTriangle, Salad } from "lucide-react";
+
+const parseCsvToArray = (csvString: string): string[] => {
+  if (!csvString.trim()) return [];
+  return csvString.split(',').map(item => item.trim()).filter(item => item.length > 0);
+};
+
+export default function RecipeSnapPage() {
+  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+  const [isLoadingIdentification, setIsLoadingIdentification] = useState(false);
+  const [identificationError, setIdentificationError] = useState<string | null>(null);
+
+  const [editableIngredients, setEditableIngredients] = useState<string[]>([]);
+  const [userAddedIngredients, setUserAddedIngredients] = useState<string>("");
+  const [excludedIngredients, setExcludedIngredients] = useState<string>("");
+  const [additionalInstructions, setAdditionalInstructions] = useState<string>("");
+
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+  const [recipeError, setRecipeError] = useState<string | null>(null);
+  const [suggestedRecipes, setSuggestedRecipes] = useState<SuggestRecipesOutput['recipes']>([]);
+  
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+
+  const { toast } = useToast();
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageDataUri(e.target?.result as string);
+        // Reset subsequent states
+        setEditableIngredients([]);
+        setSuggestedRecipes([]);
+        setIdentificationError(null);
+        setRecipeError(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleIdentifyIngredients = async () => {
+    if (!imageDataUri) {
+      setIdentificationError("Please upload an image first.");
+      toast({ title: "Error", description: "Please upload an image first.", variant: "destructive" });
+      return;
+    }
+    setIsLoadingIdentification(true);
+    setIdentificationError(null);
+    setEditableIngredients([]); // Clear previous identified ingredients
+
+    try {
+      const result: IdentifyIngredientsFromPhotoOutput = await identifyIngredientsFromPhoto({ photoDataUri: imageDataUri });
+      if (result.ingredients && result.ingredients.length > 0) {
+        setEditableIngredients(result.ingredients);
+        toast({ title: "Success!", description: `Identified ${result.ingredients.length} ingredients.` });
+      } else {
+        setIdentificationError("No ingredients could be identified from the image.");
+        toast({ title: "Hmm...", description: "No ingredients could be identified from the image.", variant: "default" });
+      }
+    } catch (error) {
+      console.error("Error identifying ingredients:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during ingredient identification.";
+      setIdentificationError(errorMessage);
+      toast({ title: "Identification Failed", description: errorMessage, variant: "destructive" });
+    } finally {
+      setIsLoadingIdentification(false);
+    }
+  };
+
+  const handleRemoveIdentifiedIngredient = (ingredientToRemove: string) => {
+    setEditableIngredients(prev => prev.filter(ing => ing !== ingredientToRemove));
+  };
+
+  const handleSuggestRecipes = async () => {
+    setIsLoadingRecipes(true);
+    setRecipeError(null);
+    setSuggestedRecipes([]);
+
+    const finalUserAdded = parseCsvToArray(userAddedIngredients);
+    const allIngredients = Array.from(new Set([...editableIngredients, ...finalUserAdded]));
+
+    if (allIngredients.length === 0) {
+      setRecipeError("Please add some ingredients to get recipe suggestions.");
+      toast({ title: "No Ingredients", description: "Please add or identify some ingredients first.", variant: "destructive"});
+      setIsLoadingRecipes(false);
+      return;
+    }
+
+    const recipeInput: SuggestRecipesInput = {
+      ingredients: allIngredients,
+      excludedIngredients: parseCsvToArray(excludedIngredients),
+      additionalInstructions: additionalInstructions.trim(),
+    };
+
+    try {
+      const result: SuggestRecipesOutput = await suggestRecipes(recipeInput);
+      if (result.recipes && result.recipes.length > 0) {
+        setSuggestedRecipes(result.recipes);
+        toast({ title: "Recipes Found!", description: `Found ${result.recipes.length} recipe suggestions.`});
+      } else {
+        setRecipeError("No recipes found matching your criteria. Try adjusting ingredients or instructions.");
+        toast({ title: "No Recipes", description: "Could not find any recipes. Try different ingredients?"});
+      }
+    } catch (error) {
+      console.error("Error suggesting recipes:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred while suggesting recipes.";
+      setRecipeError(errorMessage);
+      toast({ title: "Recipe Suggestion Failed", description: errorMessage, variant: "destructive" });
+    } finally {
+      setIsLoadingRecipes(false);
+    }
+  };
+  
+  if (!isClient) {
+    return (
+      <div className="flex flex-col min-h-screen items-center justify-center bg-background">
+        <Spinner size="xl" />
+        <p className="mt-4 text-lg text-primary">Loading RecipeSnap...</p>
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <AppHeader />
+      <main className="flex-grow container mx-auto p-4 sm:p-6 md:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Left Column: Uploader and Editor */}
+          <section className="space-y-6">
+            <ImageUploader
+              onImageChange={handleImageChange}
+              onIdentifyClick={handleIdentifyIngredients}
+              isIdentifying={isLoadingIdentification}
+              imageDataUri={imageDataUri}
+              disabled={isLoadingRecipes}
+            />
+            {identificationError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Identification Error</AlertTitle>
+                <AlertDescription>{identificationError}</AlertDescription>
+              </Alert>
+            )}
+            {(editableIngredients.length > 0 || isLoadingIdentification || userAddedIngredients || excludedIngredients || additionalInstructions) && !identificationError && (
+              <IngredientEditor
+                identifiedIngredients={editableIngredients}
+                onRemoveIdentifiedIngredient={handleRemoveIdentifiedIngredient}
+                userAddedIngredients={userAddedIngredients}
+                onUserAddedIngredientsChange={setUserAddedIngredients}
+                excludedIngredients={excludedIngredients}
+                onExcludedIngredientsChange={setExcludedIngredients}
+                additionalInstructions={additionalInstructions}
+                onAdditionalInstructionsChange={setAdditionalInstructions}
+                onSuggestRecipes={handleSuggestRecipes}
+                isSuggesting={isLoadingRecipes}
+                disabled={isLoadingIdentification}
+              />
+            )}
+          </section>
+
+          {/* Right Column: Recipe Results */}
+          <section className="space-y-6 lg:sticky lg:top-8">
+            <h2 className="text-3xl font-bold text-primary flex items-center gap-2">
+              <Salad size={30} />
+              Recipe Suggestions
+            </h2>
+            {isLoadingRecipes && (
+              <div className="flex flex-col items-center justify-center p-8 bg-card rounded-xl shadow-lg">
+                <Spinner size="lg" />
+                <p className="mt-4 text-lg text-muted-foreground">Finding delicious recipes...</p>
+              </div>
+            )}
+            {recipeError && !isLoadingRecipes && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Recipe Error</AlertTitle>
+                <AlertDescription>{recipeError}</AlertDescription>
+              </Alert>
+            )}
+            {!isLoadingRecipes && suggestedRecipes.length === 0 && !recipeError && (
+              <div className="p-8 text-center bg-card rounded-xl shadow-lg">
+                <Salad size={48} className="mx-auto text-muted-foreground mb-4" />
+                <p className="text-lg text-muted-foreground">
+                  {imageDataUri ? "Refine your ingredients and click 'Suggest Recipes'!" : "Upload an image and identify ingredients to see recipe suggestions here."}
+                </p>
+              </div>
+            )}
+            {!isLoadingRecipes && suggestedRecipes.length > 0 && (
+              <RecipeResults recipes={suggestedRecipes} />
+            )}
+          </section>
+        </div>
+      </main>
+      <footer className="text-center py-6 border-t border-border text-sm text-muted-foreground">
+        <p>&copy; {new Date().getFullYear()} RecipeSnap. Cook with what you have!</p>
+      </footer>
+    </div>
+  );
 }
