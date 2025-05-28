@@ -10,15 +10,13 @@ export default function IngredientsFromPhoto() {
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setSelectedImage(event.target.files[0]);
- setSelectedFile(event.target.files[0]);
+      setSelectedFile(event.target.files[0]);
       setError(null); // Clear previous errors
     }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedImage) {
     if (!selectedFile) {
       setError("Please select an image first.");
       return;
@@ -39,7 +37,6 @@ export default function IngredientsFromPhoto() {
 
       const data = await response.json();
       setIngredients(data.ingredients || []);
-
     } catch (err) {
       setError("An error occurred while processing the image.");
       console.error(err);
@@ -72,7 +69,7 @@ export default function IngredientsFromPhoto() {
         <div className="mb-4">
           <h2 className="text-xl font-semibold mb-2">Selected Image Preview</h2>
           <img
-            src={URL.createObjectURL(selectedImage)}
+            src={URL.createObjectURL(selectedFile)}
             alt="Selected"
             className="max-w-sm h-auto rounded"
           />
